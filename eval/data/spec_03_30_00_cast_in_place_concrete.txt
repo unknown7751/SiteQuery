@@ -1,0 +1,47 @@
+SECTION 03 30 00 - CAST-IN-PLACE CONCRETE
+Project: Riverside Medical Pavilion (vConstruct sample project)
+
+PART 1 - GENERAL
+
+1.1 SUMMARY
+A. This Section covers footings, foundation walls, slabs-on-grade, elevated slabs, columns and shear walls.
+
+1.2 REFERENCES
+A. ACI 301 - Specifications for Concrete Construction.
+B. ASTM C39 - Compressive Strength of Cylindrical Concrete Specimens.
+C. ASTM C143 - Slump of Hydraulic-Cement Concrete.
+D. ASTM C231 - Air Content of Freshly Mixed Concrete by the Pressure Method.
+
+1.3 SUBMITTALS
+A. Mix designs: Submit proposed mix designs for each class of concrete at least 14 calendar days before the first placement.
+B. Test reports: Submit compressive strength reports to the Architect within 3 working days of each test.
+C. Reinforcement shop drawings: Submit bar lists and placing drawings before fabrication.
+
+1.4 QUALITY ASSURANCE
+A. An independent testing agency shall sample concrete in accordance with ASTM C172.
+B. Cast four cylinders for each 50 cubic yards, or fraction thereof, placed in a day. Test one cylinder at 7 days and two at 28 days (ASTM C39); hold one in reserve.
+
+PART 2 - PRODUCTS
+
+2.1 CONCRETE MIXES
+A. Footings and foundation walls: 4,000 psi minimum compressive strength at 28 days; maximum water-cementitious materials ratio 0.50.
+B. Slabs-on-grade: 4,000 psi at 28 days; maximum water-cementitious materials ratio 0.45; slump 4 inches plus or minus 1 inch.
+C. Elevated slabs and columns: 5,000 psi minimum compressive strength at 28 days; maximum water-cementitious materials ratio 0.42.
+D. Exterior exposed concrete: air-entrained, 6 percent plus or minus 1.5 percent total air content (ASTM C231).
+
+2.2 REINFORCEMENT
+A. Deformed bars: ASTM A615, Grade 60.
+B. Welded wire reinforcement: ASTM A1064.
+
+PART 3 - EXECUTION
+
+3.1 PLACEMENT
+A. Do not place concrete when the ambient temperature is below 40 degrees F or above 90 degrees F unless a cold-weather or hot-weather plan has been approved by the Architect.
+B. Discharge concrete within 90 minutes after batching.
+
+3.2 CURING AND PROTECTION
+A. Moist-cure concrete for a minimum of 7 days, or apply a curing compound complying with ASTM C309.
+B. In cold weather, maintain concrete temperature at or above 50 degrees F for the first 72 hours after placement.
+
+3.3 TOLERANCES
+A. Slab floor flatness and levelness: FF 35 and FL 25 overall, measured within 72 hours of placement.

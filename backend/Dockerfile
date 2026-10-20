@@ -6,8 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DATA_DIR=/data
 
 # libgomp1: OpenMP runtime required by faiss-cpu
+# tesseract-ocr (+ English data) and poppler-utils (pdftoppm): OCR for scanned PDFs
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgomp1 curl \
+    && apt-get install -y --no-install-recommends libgomp1 curl tesseract-ocr poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

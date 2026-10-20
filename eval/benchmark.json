@@ -1,0 +1,72 @@
+[
+  {
+    "id": "Q1",
+    "question": "What minimum 28-day compressive strength is required for elevated slabs and columns?",
+    "ground_truth": "Elevated slabs and columns require a minimum compressive strength of 5,000 psi at 28 days, with a maximum water-cementitious materials ratio of 0.42.",
+    "source": "spec_03_30_00_cast_in_place_concrete.txt",
+    "evidence": "Elevated slabs and columns: 5,000 psi"
+  },
+  {
+    "id": "Q2",
+    "question": "How many days must concrete be moist-cured?",
+    "ground_truth": "Concrete must be moist-cured for a minimum of 7 days, or a curing compound complying with ASTM C309 may be applied.",
+    "source": "spec_03_30_00_cast_in_place_concrete.txt",
+    "evidence": "Moist-cure concrete for a minimum of 7 days"
+  },
+  {
+    "id": "Q3",
+    "question": "How far ahead of the first concrete placement does the mix design have to be submitted?",
+    "ground_truth": "Proposed mix designs must be submitted at least 14 calendar days before the first placement.",
+    "source": "spec_03_30_00_cast_in_place_concrete.txt",
+    "evidence": "at least 14 calendar days before the first placement"
+  },
+  {
+    "id": "Q4",
+    "question": "What is the status of RFI-1042, who must respond, and when is the response due?",
+    "ground_truth": "RFI-1042 (Level 3 slab penetration conflict with beam B-14) is Open. Halvorsen & Lee, the Structural Engineer of Record, must respond by March 11, 2025.",
+    "source": "rfi_log_2025-03.txt",
+    "evidence": "Response due: 2025-03-11"
+  },
+  {
+    "id": "Q5",
+    "question": "How was the curtain wall anchor embed conflict at gridline C/4 resolved?",
+    "ground_truth": "RFI-1043 was closed: shift the embed plates 3 inches north and add two #5 trim bars at each embed, per revised detail 7/A-502 issued with Bulletin 06.",
+    "source": "rfi_log_2025-03.txt",
+    "evidence": "Shift the embed plates 3 inches north"
+  },
+  {
+    "id": "Q6",
+    "question": "Why was the structural steel delivery delayed and what is the new delivery date?",
+    "ground_truth": "The steel mill moved the rolling date for the wide-flange shapes, so delivery slipped from March 17 to March 24, 2025.",
+    "source": "oac_meeting_minutes_2025-03-06.txt",
+    "evidence": "slipped from March 17 to March 24, 2025"
+  },
+  {
+    "id": "Q7",
+    "question": "Which ASTM standard and grade apply to wide-flange steel shapes, and what is the minimum yield strength?",
+    "ground_truth": "Wide-flange shapes must be ASTM A992, Grade 50, with a minimum yield strength of 50 ksi.",
+    "source": "spec_05_12_00_structural_steel.txt",
+    "evidence": "ASTM A992, Grade 50"
+  },
+  {
+    "id": "Q8",
+    "question": "What does Change Order CO-07 cover and how much was approved?",
+    "ground_truth": "CO-07 for $48,250 was approved by the Owner and covers additional below-grade waterproofing at the elevator pit, including a second membrane layer and protection board.",
+    "source": "oac_meeting_minutes_2025-03-06.txt",
+    "evidence": "Change Order CO-07 for $48,250"
+  },
+  {
+    "id": "Q9",
+    "question": "If it's freezing out when we pour, what do we have to do to protect the fresh concrete?",
+    "ground_truth": "In cold weather, maintain the concrete temperature at or above 50 degrees F for the first 72 hours after placement. Placing below 40 degrees F requires an approved cold-weather plan.",
+    "source": "spec_03_30_00_cast_in_place_concrete.txt",
+    "evidence": "at or above 50 degrees F for the first 72 hours"
+  },
+  {
+    "id": "Q10",
+    "question": "Are we still waiting on the engineer about the duct opening clashing with a beam on the third floor?",
+    "ground_truth": "Yes. RFI-1042 (Level 3 mechanical riser penetration vs beam B-14) is still Open; Halvorsen & Lee's response is due March 11, 2025.",
+    "source": "rfi_log_2025-03.txt",
+    "evidence": "Response due: 2025-03-11"
+  }
+]

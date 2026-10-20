@@ -34,6 +34,8 @@ class Source:
     page: int | None
     snippet: str
     relevance: float
+    rerank_score: float | None
+    ocr: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,7 +115,15 @@ def ask(
     }
     data = _request("POST", "/query", timeout=300, json=payload).json()
     sources = [
-        Source(s["index"], s["filename"], s["page"], s["snippet"], s["relevance"])
+        Source(
+            s["index"],
+            s["filename"],
+            s["page"],
+            s["snippet"],
+            s["relevance"],
+            s.get("rerank_score"),
+            bool(s.get("ocr", False)),
+        )
         for s in data["sources"]
     ]
     return Answer(data["answer"], sources)

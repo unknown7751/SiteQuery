@@ -24,8 +24,11 @@ not "data-science demo".
 ## Chat interface
 - Use `st.chat_message` + `st.chat_input` for the conversation; custom avatars for user and
   assistant. Render assistant answers as markdown.
-- Every assistant answer shows its sources (file, page, relevance, snippet) in a collapsed
-  expander or chips beneath the message, so users can verify claims.
+- Every assistant answer shows its sources (file, page, rerank score, snippet, and a
+  *Native text* / *OCR* badge) as cards beneath the message, so users can verify claims.
+- Citation markers `[n]` in answers are in-page links (`#src-<msg>-<n>`); the target card
+  expands and highlights via CSS `:target` (no JS: Streamlit strips scripts). Escape `<` in
+  answer text before injecting links, and give every card a message-scoped id.
 - Show progress for slow operations (`st.spinner` / `st.status`); never freeze silently.
 - Provide a "Clear conversation" action and suggested follow-up prompts.
 

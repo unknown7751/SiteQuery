@@ -1,5 +1,6 @@
 """vConstruct Document & RFI Assistant — Streamlit UI (layout and chat flow only)."""
 
+import re
 from html import escape
 from typing import Any
 
@@ -96,22 +97,63 @@ def human_size(num_bytes: int) -> str:
     return f"{size:.1f} GB"
 
 
-def render_sources(sources: list[dict[str, Any]]) -> None:
+CITATION = re.compile(r"\[(\d{1,2})\]")
+
+
+def link_citations(text: str, sources: list[dict[str, Any]], msg_id: int) -> str:
+    """Turn `[n]` markers into in-page links to that message's source cards.
+
+    Pure HTML/CSS (no JS): the link sets the URL hash and the card's `:target` style
+    expands and highlights it. `<` is escaped first because document text can reach the answer.
+    """
+    known = {s["index"] for s in sources}
+
+    def link(match: re.Match[str]) -> str:
+        n = int(match.group(1))
+        if n not in known:
+            return match.group(0)
+        return (
+            f'<a class="cite" href="#src-{msg_id}-{n}" target="_self" '
+            f'title="Show source [{n}]">[{n}]</a>'
+        )
+
+    return CITATION.sub(link, text.replace("<", "&lt;"))
+
+
+def source_card(s: dict[str, Any], msg_id: int) -> str:
+    page = f" · p. {s['page']}" if s["page"] else ""
+    if s["ocr"]:
+        badge = '<span class="badge ocr" title="Text recovered by OCR; may contain errors">🔍 OCR</span>'
+    else:
+        badge = '<span class="badge native" title="Text read directly from the file">📄 Native text</span>'
+    if s["rerank_score"] is not None:
+        score = (
+            f'<span title="Cross-encoder relevance. Hybrid rank agreement: {s["relevance"]:.0%}">'
+            f'Rerank {s["rerank_score"]:.0%}</span>'
+        )
+    else:
+        score = f'<span title="Hybrid rank agreement">Match {s["relevance"]:.0%}</span>'
+    return (
+        f'<div class="src" id="src-{msg_id}-{s["index"]}">'
+        f'<div class="src-head"><div><span class="chip">[{s["index"]}]</span>'
+        f'<b>{escape(s["filename"])}</b>{page} {badge}</div>{score}</div>'
+        f'<div class="src-snippet">{escape(s["snippet"])}</div></div>'
+    )
+
+
+def render_sources(sources: list[dict[str, Any]], msg_id: int) -> None:
     if not sources:
         return
-    with st.expander(f"📎 {len(sources)} sources"):
-        for s in sources:
-            page = f" · p. {s['page']}" if s["page"] else ""
-            st.markdown(
-                f"""<div class="src">
-                  <div class="src-head">
-                    <div><span class="chip">[{s['index']}]</span><b>{escape(s['filename'])}</b>{page}</div>
-                    <span>{s['relevance']:.0%} match</span>
-                  </div>
-                  <div class="src-snippet">{escape(s['snippet'])}</div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
+    cards = "".join(source_card(s, msg_id) for s in sources)
+    st.markdown(
+        f'<div class="src-label">📎 {len(sources)} sources · click a citation to expand</div>{cards}',
+        unsafe_allow_html=True,
+    )
+
+
+def render_assistant_message(content: str, sources: list[dict[str, Any]], msg_id: int) -> None:
+    st.markdown(link_citations(content, sources, msg_id), unsafe_allow_html=True)
+    render_sources(sources, msg_id)
 
 
 def render_sidebar() -> None:
@@ -250,9 +292,8 @@ def answer_question(prompt: str) -> None:
             st.error(exc.message)
             st.session_state[MESSAGES].pop()  # drop the unanswered question
             return
-        st.markdown(answer.text)
         sources = [vars_of(s) for s in answer.sources]
-        render_sources(sources)
+        render_assistant_message(answer.text, sources, len(st.session_state[MESSAGES]))
     st.session_state[MESSAGES].append({"role": "assistant", "content": answer.text, "sources": sources})
 
 
@@ -263,6 +304,8 @@ def vars_of(source: api.Source) -> dict[str, Any]:
         "page": source.page,
         "snippet": source.snippet,
         "relevance": source.relevance,
+        "rerank_score": source.rerank_score,
+        "ocr": source.ocr,
     }
 
 
@@ -293,10 +336,12 @@ def main() -> None:
             f'<div class="topbar"><h2>Conversation</h2><small>Searching {scope} document(s)</small></div>',
             unsafe_allow_html=True,
         )
-    for m in messages:
+    for msg_id, m in enumerate(messages):
         with st.chat_message(m["role"], avatar="🧑‍💼" if m["role"] == "user" else "🏗️"):
-            st.markdown(m["content"])
-            render_sources(m["sources"])
+            if m["role"] == "assistant":
+                render_assistant_message(m["content"], m["sources"], msg_id)
+            else:
+                st.markdown(m["content"])
 
     if prompt:
         answer_question(prompt)

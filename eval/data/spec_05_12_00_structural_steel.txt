@@ -1,0 +1,37 @@
+SECTION 05 12 00 - STRUCTURAL STEEL FRAMING
+Project: Riverside Medical Pavilion (vConstruct sample project)
+
+PART 1 - GENERAL
+
+1.1 SUMMARY
+A. This Section covers wide-flange beams and columns, HSS members, base plates, and connections.
+
+1.2 REFERENCES
+A. AISC 360 - Specification for Structural Steel Buildings.
+B. AWS D1.1 - Structural Welding Code - Steel.
+C. ASTM A992 - Structural Steel Shapes.
+D. ASTM F3125 - High-Strength Structural Bolts.
+
+1.3 SUBMITTALS
+A. Shop drawings: Submit shop drawings and erection drawings sealed by a licensed structural engineer. Allow 10 working days for review of each submittal.
+B. Mill certificates: Submit mill test reports for all structural shapes and plates.
+C. Welder certifications: Submit AWS certifications for every welder, current within 6 months.
+D. Bolt certifications: Submit manufacturer certificates for all high-strength bolts and tension-control assemblies.
+
+PART 2 - PRODUCTS
+
+2.1 MATERIALS
+A. Wide-flange shapes: ASTM A992, Grade 50, with a minimum yield strength of 50 ksi.
+B. HSS rectangular and square sections: ASTM A500, Grade C.
+C. Plates and angles: ASTM A36.
+D. High-strength bolts: ASTM F3125 Grade A325, snug-tight unless noted as pretensioned.
+
+PART 3 - EXECUTION
+
+3.1 ERECTION
+A. Verify anchor rod locations and elevations before erection. Report discrepancies to the Architect by RFI.
+B. Maintain a minimum of 3/4 inch bearing on base plates after grouting.
+
+3.2 FIELD QUALITY CONTROL
+A. Inspect 100 percent of complete-joint-penetration welds by ultrasonic testing.
+B. Inspect pretensioned bolted joints in accordance with the RCSC Specification.

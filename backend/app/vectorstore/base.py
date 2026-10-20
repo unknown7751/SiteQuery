@@ -10,6 +10,12 @@ from langchain_core.documents import Document
 class SearchHit:
     document: Document
     relevance: float  # 0..1, higher is better
+    rerank_score: float | None = None  # cross-encoder probability (0..1); None if not reranked
+
+
+def chunk_key(document: Document) -> str:
+    """Stable identity of a chunk across retrievers; mirrors the ingestion id `<doc_id>:<n>`."""
+    return f"{document.metadata.get('doc_id', '')}:{document.metadata.get('chunk_index', '')}"
 
 
 class VectorStore(Protocol):
@@ -23,3 +29,7 @@ class VectorStore(Protocol):
 
     @property
     def size(self) -> int: ...
+
+
+class Reranker(Protocol):
+    def rerank(self, query: str, hits: list[SearchHit], top_n: int) -> list[SearchHit]: ...

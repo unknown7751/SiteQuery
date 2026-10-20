@@ -7,11 +7,19 @@ services:
       - "8000:8000"
     environment:
       DATA_DIR: /data
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
-      ANTHROPIC_EFFORT: ${ANTHROPIC_EFFORT:-medium}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      GROQ_REASONING_EFFORT: ${GROQ_REASONING_EFFORT:-medium}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-BAAI/bge-small-en-v1.5}
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      OCR_LANGUAGE: ${OCR_LANGUAGE:-eng}
+      OCR_MAX_PAGES: ${OCR_MAX_PAGES:-100}
+      RETRIEVAL_CANDIDATES: ${RETRIEVAL_CANDIDATES:-20}
+      RERANK_ENABLED: ${RERANK_ENABLED:-true}
+      RERANK_MODEL: ${RERANK_MODEL:-Xenova/ms-marco-MiniLM-L-6-v2}
+      RERANK_CANDIDATES: ${RERANK_CANDIDATES:-20}
+      RERANK_THRESHOLD: ${RERANK_THRESHOLD:-0.10}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8501}
     volumes:
       # Persist on the host: uploaded files, FAISS index + manifest, embedding model cache
@@ -23,7 +31,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 120s   # first boot downloads the embedding model
+      start_period: 180s   # first boot downloads the embedding + reranker models
     restart: unless-stopped
 
   ui:

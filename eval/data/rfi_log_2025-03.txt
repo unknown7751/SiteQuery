@@ -1,0 +1,31 @@
+RIVERSIDE MEDICAL PAVILION - RFI LOG (as of March 6, 2025)
+
+RFI-1038
+Subject: Level 2 slab penetration conflicts with beam B-09
+Submitted by: Apex Mechanical on 2025-02-18
+Assigned to: Halvorsen & Lee, Structural Engineer of Record
+Status: Closed on 2025-02-24
+Response: Relocate the 8-inch penetration 14 inches east of gridline C. No beam modification required.
+
+RFI-1042
+Subject: Level 3 slab penetration conflicts with beam B-14
+Submitted by: Apex Mechanical on 2025-03-04
+Spec reference: 03 30 00 Cast-in-Place Concrete
+Assigned to: Halvorsen & Lee, Structural Engineer of Record
+Response due: 2025-03-11
+Status: Open
+Question: The 10-inch mechanical riser penetration shown on drawing M-301 at Level 3 interferes with the bottom flange of beam B-14. Please advise on relocation or an approved reinforcing detail.
+
+RFI-1043
+Subject: Curtain wall anchor embed plates conflict with column rebar at gridline C/4
+Submitted by: Meridian Glazing on 2025-02-27
+Assigned to: Studio Kline, Architect of Record
+Status: Closed on 2025-03-03
+Response: Shift the embed plates 3 inches north and add two #5 trim bars at each embed. Revised detail 7/A-502 is issued with Bulletin 06.
+
+RFI-1051
+Subject: Door hardware schedule on drawing A-601 does not match specification 08 71 00
+Submitted by: Keystone Doors on 2025-03-05
+Assigned to: Studio Kline, Architect of Record
+Status: Answered on 2025-03-06
+Response: The specification governs. Provide mortise locksets, Grade 1, at all corridor doors. The drawing schedule will be corrected in the next revision.

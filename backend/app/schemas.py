@@ -45,7 +45,14 @@ class SourceChunk(BaseModel):
     filename: str
     page: int | None = None
     snippet: str
-    relevance: float = Field(ge=0.0, le=1.0)
+    relevance: float = Field(ge=0.0, le=1.0, description="Normalised RRF rank agreement.")
+    rerank_score: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Cross-encoder relevance (sigmoid of the logit); null when reranking is off.",
+    )
+    ocr: bool = Field(default=False, description="True if this chunk's text came from OCR.")
 
 
 class QueryResponse(BaseModel):
@@ -60,3 +67,9 @@ class HealthResponse(BaseModel):
     chunks: int
     llm_configured: bool
     model: str
+
+
+class RootResponse(BaseModel):
+    status: Literal["API is running"]
+    service: str
+    docs: str

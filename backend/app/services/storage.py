@@ -43,7 +43,7 @@ async def save_upload(upload: UploadFile, settings: Settings) -> StoredFile:
         raise UnsupportedFileTypeError(
             f"Unsupported file type '{suffix or 'none'}'. Allowed: {allowed}."
         )
-    loader = get_loader(original)
+    loader = get_loader(original, settings)
 
     doc_id = uuid.uuid4().hex
     settings.upload_dir.mkdir(parents=True, exist_ok=True)

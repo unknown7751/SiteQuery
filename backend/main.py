@@ -6,10 +6,11 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-import anthropic
+import groq
 from fastapi import Depends, FastAPI, File, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from langchain_core.documents import Document
 
 from backend.app.config import Settings, get_settings
 from backend.app.errors import AppError, DuplicateDocumentError
@@ -18,15 +19,28 @@ from backend.app.schemas import (
     HealthResponse,
     QueryRequest,
     QueryResponse,
+    RootResponse,
     UploadResponse,
 )
 from backend.app.services.ingestion import IngestionService
+from backend.app.services.llm import build_llm
 from backend.app.services.rag import RagService
 from backend.app.services.registry import DocumentRegistry
-from backend.app.vectorstore import FaissVectorStore, build_embeddings
+from backend.app.vectorstore import (
+    CrossEncoderReranker,
+    FaissVectorStore,
+    HybridVectorStore,
+    Reranker,
+    SearchHit,
+    build_embeddings,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def _warmup_hit() -> SearchHit:
+    return SearchHit(document=Document(page_content="warm-up"), relevance=0.0)
 
 
 @asynccontextmanager
@@ -40,26 +54,36 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         build_embeddings, settings.embedding_model, settings.model_cache_dir
     )
     await asyncio.to_thread(embeddings.embed_query, "warm-up")
-    store = await asyncio.to_thread(FaissVectorStore, settings.index_dir, embeddings)
+    dense = await asyncio.to_thread(FaissVectorStore, settings.index_dir, embeddings)
+    store = await asyncio.to_thread(
+        HybridVectorStore, dense, settings.retrieval_candidates, settings.rrf_k
+    )
     registry = DocumentRegistry(settings.index_dir / "documents.json")
 
-    llm = (
-        anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
-        if settings.anthropic_api_key
-        else None
-    )
+    reranker: Reranker | None = None
+    if settings.rerank_enabled:
+        cross_encoder = await asyncio.to_thread(
+            CrossEncoderReranker,
+            settings.rerank_model,
+            settings.model_cache_dir,
+            settings.rerank_threshold,
+        )
+        await asyncio.to_thread(cross_encoder.rerank, "warm-up", [_warmup_hit()], 1)
+        reranker = cross_encoder
+    else:
+        logger.info("Cross-encoder reranking disabled (RERANK_ENABLED=false)")
+
+    llm = build_llm(settings)
     if llm is None:
-        logger.warning("ANTHROPIC_API_KEY not set: uploads work, /query will return 503")
+        logger.warning("GROQ_API_KEY not set: uploads work, /query will return 503")
 
     app.state.settings = settings
     app.state.registry = registry
     app.state.store = store
     app.state.ingestion = IngestionService(settings, store, registry)
-    app.state.rag = RagService(settings, store, llm)
+    app.state.rag = RagService(settings, store, llm, reranker)
     logger.info("Startup complete: %d vectors indexed", store.size)
     yield
-    if llm is not None:
-        await llm.close()
 
 
 app = FastAPI(
@@ -112,27 +136,51 @@ async def handle_app_error(_: Request, exc: AppError) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content=body)
 
 
-@app.exception_handler(anthropic.RateLimitError)
-async def handle_rate_limit(_: Request, exc: anthropic.RateLimitError) -> JSONResponse:
-    logger.warning("Anthropic rate limit: %s", exc)
+# Starlette picks the handler for the most specific class in the exception's MRO, so the
+# broad APIStatusError handler below only catches what the specific ones don't.
+
+
+@app.exception_handler(groq.RateLimitError)
+async def handle_rate_limit(_: Request, exc: groq.RateLimitError) -> JSONResponse:
+    logger.warning("Groq rate limit: %s", exc)
+    headers: dict[str, str] = {}
+    retry_after = exc.response.headers.get("retry-after")
+    if retry_after:
+        headers["Retry-After"] = retry_after
+    wait = f" Try again in about {retry_after} seconds." if retry_after else " Please retry shortly."
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        content={"detail": "The language model is rate limited. Please retry shortly."},
+        content={"detail": f"The language model is rate limited.{wait}"},
+        headers=headers,
     )
 
 
-@app.exception_handler(anthropic.APIConnectionError)
-async def handle_llm_connection(_: Request, exc: anthropic.APIConnectionError) -> JSONResponse:
-    logger.error("Anthropic connection error: %s", exc)
+@app.exception_handler(groq.AuthenticationError)
+@app.exception_handler(groq.PermissionDeniedError)
+async def handle_llm_auth(_: Request, exc: groq.APIStatusError) -> JSONResponse:
+    # Server-side misconfiguration, not the caller's fault: hence 500, and name the fix.
+    logger.error("Groq rejected the API key (%s): %s", exc.status_code, exc.message)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": "The language model rejected the server's credentials. "
+            "Check that GROQ_API_KEY is valid and has access to the configured model."
+        },
+    )
+
+
+@app.exception_handler(groq.APIConnectionError)
+async def handle_llm_connection(_: Request, exc: groq.APIConnectionError) -> JSONResponse:
+    logger.error("Groq connection error: %s", exc)
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
         content={"detail": "Could not reach the language model service."},
     )
 
 
-@app.exception_handler(anthropic.APIStatusError)
-async def handle_llm_status(_: Request, exc: anthropic.APIStatusError) -> JSONResponse:
-    logger.error("Anthropic API error %s: %s", exc.status_code, exc.message)
+@app.exception_handler(groq.APIStatusError)
+async def handle_llm_status(_: Request, exc: groq.APIStatusError) -> JSONResponse:
+    logger.error("Groq API error %s: %s", exc.status_code, exc.message)
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
         content={"detail": "The language model service returned an error."},
@@ -151,6 +199,11 @@ async def handle_unexpected(_: Request, exc: Exception) -> JSONResponse:
 # ---- routes ---------------------------------------------------------------------------
 
 
+@app.get("/", response_model=RootResponse, tags=["system"])
+async def root() -> RootResponse:
+    return RootResponse(status="API is running", service=app.title, docs="/docs")
+
+
 @app.get("/health", response_model=HealthResponse, tags=["system"])
 async def health(request: Request, registry: RegistryDep, rag: RagDep, settings: SettingsDep) -> HealthResponse:
     records = await asyncio.to_thread(registry.list)
@@ -159,7 +212,7 @@ async def health(request: Request, registry: RegistryDep, rag: RagDep, settings:
         documents=len(records),
         chunks=request.app.state.store.size,
         llm_configured=rag.llm_configured,
-        model=settings.anthropic_model,
+        model=settings.groq_model,
     )
 
 
@@ -208,9 +261,10 @@ async def delete_document(doc_id: str, ingestion: IngestionDep) -> None:
     response_model=QueryResponse,
     tags=["chat"],
     responses={
-        429: {"description": "Model rate limited"},
-        502: {"description": "Model service error"},
-        503: {"description": "ANTHROPIC_API_KEY not configured"},
+        429: {"description": "Model rate limited (Retry-After header when provided)"},
+        500: {"description": "Model rejected the server's GROQ_API_KEY"},
+        502: {"description": "Model service unreachable or returned an error"},
+        503: {"description": "GROQ_API_KEY not configured"},
     },
 )
 async def query(body: QueryRequest, rag: RagDep) -> QueryResponse:

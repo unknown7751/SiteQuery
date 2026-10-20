@@ -6,7 +6,6 @@ from pathlib import Path
 
 from fastapi import UploadFile
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from backend.app.config import Settings
 from backend.app.errors import (
@@ -17,6 +16,7 @@ from backend.app.errors import (
 )
 from backend.app.loaders import get_loader
 from backend.app.schemas import DocumentInfo
+from backend.app.services.chunking import build_splitter
 from backend.app.services.registry import DocumentRecord, DocumentRegistry, utcnow
 from backend.app.services.storage import StoredFile, save_upload
 from backend.app.vectorstore import VectorStore
@@ -31,11 +31,7 @@ class IngestionService:
         self._settings = settings
         self._store = store
         self._registry = registry
-        self._splitter = RecursiveCharacterTextSplitter(
-            chunk_size=settings.chunk_size,
-            chunk_overlap=settings.chunk_overlap,
-            separators=["\n\n", "\n", ". ", " ", ""],
-        )
+        self._splitter = build_splitter(settings)
 
     async def ingest(self, upload: UploadFile) -> DocumentInfo:
         stored = await save_upload(upload, self._settings)
@@ -79,7 +75,7 @@ class IngestionService:
         logger.info("Deleted document %s (%s)", record.filename, doc_id)
 
     def _parse_and_split(self, stored: StoredFile) -> tuple[list[Document], int | None]:
-        loader = get_loader(stored.original_name)
+        loader = get_loader(stored.original_name, self._settings)
         try:
             pages = loader.load(stored.path)
         except Exception as exc:  # parser libraries raise many unrelated types
@@ -91,8 +87,8 @@ class IngestionService:
         pages = [p for p in pages if p.page_content.strip()]
         if not pages:
             raise NoExtractableTextError(
-                "No extractable text found. Scanned documents need OCR, which is not "
-                "supported yet."
+                "No extractable text found. If this is a scan, OCR may be disabled or "
+                "unavailable on the server, or the scan quality is too low to read."
             )
 
         chunks = self._splitter.split_documents(pages)

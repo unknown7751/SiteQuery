@@ -135,19 +135,45 @@ button[kind="primary"]:hover { transform: translateY(-1px); filter: brightness(1
 [data-testid="stChatInput"]:focus-within { border-color: var(--brand); }
 
 /* sources */
+.src-label {
+  text-transform: uppercase; letter-spacing: .08em; font-size: .68rem; font-weight: 600;
+  color: var(--ink-3); margin: .9rem 0 .45rem;
+}
 .src {
   border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 10px;
   padding: .6rem .8rem; margin-bottom: .55rem; background: var(--canvas);
+  scroll-margin-top: 5rem; transition: background .2s, box-shadow .2s;
 }
 .src-head { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; }
 .src-head b { color: var(--ink); }
-.src-head span { color: var(--ink-2); white-space: nowrap; }
-.src-snippet { font-size: .8rem; color: var(--ink-2); margin-top: .3rem; line-height: 1.5; }
+.src-head > span { color: var(--ink-2); white-space: nowrap; }
+.src-snippet {
+  font-size: .8rem; color: var(--ink-2); margin-top: .3rem; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* Citation links set the URL hash; :target expands and highlights the matching card. */
+.src:target {
+  background: var(--brand-soft); border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 107, 26, .22);
+}
+.src:target .src-snippet { display: block; -webkit-line-clamp: unset; overflow: visible; color: var(--ink); }
 .chip {
   display: inline-block; background: var(--brand-soft); color: var(--brand-dark);
   border-radius: 999px; padding: .05rem .5rem; font-size: .72rem; font-weight: 700;
   margin-right: .4rem;
 }
+a.cite {
+  display: inline-block; background: var(--brand-soft); color: var(--brand-dark) !important;
+  border-radius: 6px; padding: 0 .3rem; font-size: .8em; font-weight: 700;
+  text-decoration: none !important; line-height: 1.5; margin: 0 .05rem;
+}
+a.cite:hover, a.cite:focus-visible { background: var(--brand); color: #fff !important; }
+.badge {
+  display: inline-block; border-radius: 6px; padding: .02rem .4rem; margin-left: .35rem;
+  font-size: .68rem; font-weight: 600; border: 1px solid transparent; vertical-align: 1px;
+}
+.badge.native { background: var(--canvas); color: var(--ink-2); border-color: var(--border); }
+.badge.ocr { background: var(--warn-soft); color: var(--warn); border-color: #fcd34d; }
 
 [data-testid="stExpander"] {
   border: 1px solid var(--border); border-radius: 12px; background: var(--surface);

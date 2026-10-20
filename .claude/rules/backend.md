@@ -8,8 +8,9 @@ paths:
 ## Async everywhere
 - All endpoints are `async def`. Never block the event loop: FAISS search/add/persist,
   embedding, PDF/DOCX parsing and file hashing run via `asyncio.to_thread`.
-- Use `anthropic.AsyncAnthropic` for LLM calls. One shared client created in the lifespan.
-- Create heavyweight objects (embeddings, FAISS store, Anthropic client) once in the
+- Use LangChain's `ChatGroq` (built in `services/llm.py`) and `await llm.ainvoke(...)` for
+  LLM calls. One shared client created in the lifespan.
+- Create heavyweight objects (embeddings, FAISS store, cross-encoder reranker, LLM client) once in the
   `lifespan` handler, store on `app.state`, expose via `Depends` providers.
 
 ## File upload handling (be paranoid)
@@ -29,8 +30,9 @@ paths:
 - Services raise domain exceptions (`app/errors.py`); routes translate them to
   `HTTPException` with a clear, non-leaky `detail`. Unexpected errors → logged with
   `logger.exception` and returned as a generic `500`.
-- LLM errors map explicitly: missing key → `503`, `RateLimitError` → `429`,
-  `APIConnectionError` / `APIStatusError` → `502`. Catch the most specific class first.
+- LLM errors map explicitly (`groq` exceptions): missing key → `503`, `RateLimitError` → `429`
+  (forward `Retry-After`), `AuthenticationError` / `PermissionDeniedError` → `500` (bad server
+  key), `APIConnectionError` / `APIStatusError` → `502`. Catch the most specific class first.
 - Endpoints declare `response_model`, status codes, and `responses=` for error cases.
 
 ## FAISS / vector logic separation

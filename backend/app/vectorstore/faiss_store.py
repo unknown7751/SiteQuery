@@ -37,6 +37,14 @@ class FaissVectorStore:
         with self._lock:
             return 0 if self._db is None else int(self._db.index.ntotal)
 
+    def documents(self) -> list[tuple[str, Document]]:
+        """Snapshot of every (chunk id, chunk) — used to seed the keyword index at startup."""
+        with self._lock:
+            if self._db is None:
+                return []
+            found = ((i, self._db.docstore.search(i)) for i in self._db.index_to_docstore_id.values())
+            return [(i, doc) for i, doc in found if isinstance(doc, Document)]
+
     def add(self, chunks: list[Document], ids: list[str]) -> None:
         if len(chunks) != len(ids):
             raise ValueError("chunks and ids must have the same length")
