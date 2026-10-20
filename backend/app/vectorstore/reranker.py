@@ -30,8 +30,11 @@ class CrossEncoderReranker:
     def rerank(self, query: str, hits: list[SearchHit], top_n: int) -> list[SearchHit]:
         """Return up to `top_n` hits scoring >= `min_score`, best first, with `rerank_score` set.
 
-        May return fewer than `top_n` (or none): weak chunks cost LLM tokens and invite
-        answers built on irrelevant text, so they are dropped rather than padded in.
+        May return fewer than `top_n`: weak chunks cost LLM tokens and invite answers built on
+        irrelevant text, so they are dropped rather than padded in. Never returns empty for
+        non-empty input: if nothing clears `min_score` the single best chunk is kept (top-1
+        fallback), because cross-encoders under-score casual phrasing and the LLM is better
+        placed than a score cutoff to say "the documents don't contain this".
 
         The model emits raw logits; they are squashed with a sigmoid so the UI and API get a
         0..1 value. `relevance` (RRF rank agreement) is left untouched.
@@ -47,8 +50,14 @@ class CrossEncoderReranker:
         ]
         scored.sort(key=lambda h: h.rerank_score or 0.0, reverse=True)
         kept = [h for h in scored if (h.rerank_score or 0.0) >= self._min_score][:top_n]
+        if not kept:
+            kept = scored[:1]
+            logger.info(
+                "No candidate cleared rerank threshold %.2f; keeping top-1 (score %.3f)",
+                self._min_score, kept[0].rerank_score or 0.0,
+            )
         logger.debug(
-            "Reranked %d candidates -> %d above threshold %.2f (top_n=%d)",
+            "Reranked %d candidates -> %d kept (threshold %.2f, top_n=%d)",
             len(hits), len(kept), self._min_score, top_n,
         )
         return kept

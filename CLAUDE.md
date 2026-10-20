@@ -17,7 +17,7 @@ hybrid retrieval. Phase 3 = Groq migration, cross-encoder reranking, evaluation 
 | Vector index   | FAISS (`faiss-cpu`) via LangChain `FAISS`, persisted to disk            |
 | Keyword index  | BM25 (`rank_bm25`), in-memory, rebuilt from the FAISS docstore at startup |
 | Retrieval      | Hybrid: FAISS dense + BM25 sparse, fused with Reciprocal Rank Fusion (RRF) |
-| Reranking      | FastEmbed ONNX cross-encoder (`Xenova/ms-marco-MiniLM-L-6-v2`, local, no torch) re-scores the RRF candidates; top-k go to the LLM |
+| Reranking      | FastEmbed ONNX cross-encoder (`BAAI/bge-reranker-base`, local, no torch) re-scores the RRF candidates; top-k go to the LLM |
 | Embeddings     | FastEmbed (ONNX, local, no API key) — default `BAAI/bge-small-en-v1.5` |
 | Generation     | Groq `openai/gpt-oss-120b` via LangChain `ChatGroq` (`services/llm.py`), async `ainvoke` |
 | Evaluation     | `eval/evaluate_rag.py`: synthetic benchmark, LLM-judge metrics (faithfulness, answer relevance, context precision) + deterministic hit@k/MRR |
@@ -32,11 +32,12 @@ backend/
   app/schemas.py          Pydantic request/response models
   app/loaders/            One loader per file type + registry (extension -> loader)
   app/vectorstore/        ALL FAISS, BM25, embedding, fusion and reranker code lives here, nowhere else
-  app/services/           storage (uploads), registry (manifest), ingestion, rag
+  app/services/           storage (uploads), registry (manifest), ingestion, rag, seeding
 frontend/
   app.py                  Streamlit entrypoint (layout + chat flow)
   api_client.py           Typed HTTP client for the API
   styles.py               Custom CSS
+sample_data/              Demo docs auto-ingested on first start if the index is empty (SEED_SAMPLE_DATA)
 eval/                     evaluate_rag.py, benchmark.json, data/ (synthetic docs), reports/
 data/                     Bind-mounted: uploads/, index/ (FAISS), models/ (embedding cache)
 docker-compose.yml
@@ -98,8 +99,9 @@ docker compose down
   `relevance` is normalised RRF rank agreement (0..1), not cosine similarity.
 - Retrieval pipeline: hybrid search fetches `RERANK_CANDIDATES` (default 20) fused chunks, the
   cross-encoder re-scores them, and only the top `top_k` (default 5) scoring >= `RERANK_THRESHOLD`
-  (default 0.10) reach the LLM, so it can be fewer than `top_k`; if none pass, `/query` answers
-  "no relevant passages" without calling the LLM. Sources
+  (default 0.10) reach the LLM, so it can be fewer than `top_k`. Top-1 fallback: if none pass, the
+  single best chunk is still sent (the LLM says "not in the documents" itself); "no relevant passages"
+  is returned without an LLM call only when retrieval finds nothing at all. Sources
   keep `relevance` (RRF) and add `rerank_score` (sigmoid of the cross-encoder logit, 0..1;
   `null` when `RERANK_ENABLED=false`) and `ocr` (chunk text came from OCR).
 - PDF pages with < `OCR_MIN_CHARS` embedded characters are OCR'd (`ocr: true` in chunk
@@ -116,8 +118,9 @@ docker compose down
   reranking, or the RAG prompt, and commit the refreshed `eval/reports/latest.md`.
 - The benchmark (`eval/benchmark.json`) is small and synthetic (4 documents, 10 questions):
   it catches regressions, it does not prove production quality. Hybrid-only hits 1.00; with the
-  reranker + `RERANK_THRESHOLD=0.10` hit@k is 0.90 because the cross-encoder scores the colloquial
-  Q10 near 0 and the cutoff drops its chunk. Check this trade-off when changing the threshold.
+  the old MS-MARCO reranker + `RERANK_THRESHOLD=0.10` hit@k was 0.90 (colloquial Q10 scored near 0 and
+  was cut). The reranker is now `BAAI/bge-reranker-base` with a top-1 fallback; `eval/reports/latest.md`
+  predates that change and must be regenerated. Check this trade-off when changing the threshold.
 - Judge and generator are the same Groq model, so scores are optimistic. Groq's free tier
   rate-limits the run; the script waits out 429s, so a full `--compare` takes ~10 minutes.
 

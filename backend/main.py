@@ -26,6 +26,7 @@ from backend.app.services.ingestion import IngestionService
 from backend.app.services.llm import build_llm
 from backend.app.services.rag import RagService
 from backend.app.services.registry import DocumentRegistry
+from backend.app.services.seeding import seed_sample_data
 from backend.app.vectorstore import (
     CrossEncoderReranker,
     FaissVectorStore,
@@ -82,6 +83,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.store = store
     app.state.ingestion = IngestionService(settings, store, registry)
     app.state.rag = RagService(settings, store, llm, reranker)
+    await seed_sample_data(settings, store, registry, app.state.ingestion)
     logger.info("Startup complete: %d vectors indexed", store.size)
     yield
 

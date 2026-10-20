@@ -39,6 +39,8 @@ def _env_bool(name: str, default: bool) -> bool:
 @dataclass(frozen=True, slots=True)
 class Settings:
     data_dir: Path
+    sample_data_dir: Path
+    seed_sample_data: bool
     max_upload_mb: int
     allowed_extensions: frozenset[str]
     embedding_model: str
@@ -87,6 +89,10 @@ class Settings:
 def get_settings() -> Settings:
     return Settings(
         data_dir=Path(os.environ.get("DATA_DIR", str(_REPO_ROOT / "data"))).resolve(),
+        sample_data_dir=Path(
+            os.environ.get("SAMPLE_DATA_DIR", str(_REPO_ROOT / "sample_data"))
+        ).resolve(),
+        seed_sample_data=_env_bool("SEED_SAMPLE_DATA", True),
         max_upload_mb=_env_int("MAX_UPLOAD_MB", 50),
         allowed_extensions=frozenset({".pdf", ".docx", ".txt", ".md"}),
         embedding_model=os.environ.get("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
@@ -96,7 +102,7 @@ def get_settings() -> Settings:
         retrieval_candidates=_env_int("RETRIEVAL_CANDIDATES", 20),
         rrf_k=_env_int("RRF_K", 60),
         rerank_enabled=_env_bool("RERANK_ENABLED", True),
-        rerank_model=os.environ.get("RERANK_MODEL", "Xenova/ms-marco-MiniLM-L-6-v2"),
+        rerank_model=os.environ.get("RERANK_MODEL", "BAAI/bge-reranker-base"),
         rerank_candidates=_env_int("RERANK_CANDIDATES", 20),
         rerank_threshold=_env_float("RERANK_THRESHOLD", 0.10),
         ocr_enabled=_env_bool("OCR_ENABLED", True),
