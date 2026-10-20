@@ -1,0 +1,40 @@
+services:
+  api:
+    build:
+      context: ./backend
+    container_name: vconstruct-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_DIR: /data
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+      ANTHROPIC_EFFORT: ${ANTHROPIC_EFFORT:-medium}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-BAAI/bge-small-en-v1.5}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8501}
+    volumes:
+      # Persist on the host: uploaded files, FAISS index + manifest, embedding model cache
+      - ./data/uploads:/data/uploads
+      - ./data/index:/data/index
+      - ./data/models:/data/models
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s   # first boot downloads the embedding model
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./frontend
+    container_name: vconstruct-ui
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
