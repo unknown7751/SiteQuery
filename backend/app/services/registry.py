@@ -9,6 +9,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from backend.app.errors import ManifestCorruptedError
+from backend.app.fsutil import atomic_write_bytes
 from backend.app.schemas import DocumentInfo
 
 logger = logging.getLogger(__name__)
@@ -72,18 +74,39 @@ class DocumentRegistry:
             return record
 
     def _read(self) -> dict[str, DocumentRecord]:
-        if not self._path.exists():
+        """Load the manifest; a corrupt one is quarantined and raises instead of resetting.
+
+        Silently starting empty would be destructive: the index still holds every chunk, and
+        the next write would overwrite what is left of the manifest. I/O errors (permissions,
+        a flaky disk) propagate unchanged; only unparseable *content* is quarantined.
+        """
+        try:
+            text = self._path.read_text(encoding="utf-8")
+        except FileNotFoundError:
             return {}
         try:
-            raw = json.loads(self._path.read_text(encoding="utf-8"))
+            raw = json.loads(text)
             return {r["id"]: DocumentRecord.model_validate(r) for r in raw}
-        except (OSError, ValueError, KeyError):
-            logger.exception("Could not read document manifest %s; starting empty", self._path)
-            return {}
+        except (ValueError, KeyError, TypeError) as exc:  # ValueError covers JSON/UTF-8/pydantic
+            quarantined = self._quarantine()
+            logger.error("Document manifest %s is corrupt: %s", self._path, exc)
+            raise ManifestCorruptedError(self._path, quarantined, str(exc)) from exc
+
+    def _quarantine(self) -> Path | None:
+        """Move the corrupt manifest aside without clobbering an earlier quarantined copy."""
+        target = self._path.with_name(f"{self._path.name}.corrupt")
+        n = 0
+        while target.exists():
+            n += 1
+            target = self._path.with_name(f"{self._path.name}.corrupt.{n}")
+        try:
+            os.replace(self._path, target)
+        except OSError:
+            logger.exception("Could not quarantine %s", self._path)
+            return None
+        return target
 
     def _write(self) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self._path.with_suffix(".tmp")
         payload = [r.model_dump(mode="json") for r in self._records.values()]
-        tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        os.replace(tmp, self._path)
+        atomic_write_bytes(self._path, json.dumps(payload, indent=2).encode("utf-8"))
