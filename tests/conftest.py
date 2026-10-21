@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
 from backend.app.vectorstore.faiss_store import FaissVectorStore
@@ -69,6 +70,21 @@ def embeddings() -> Iterator[ControllableEmbeddings]:
     emb.gate.set()  # never leave a worker thread parked after a failed test
 
 
+MODEL_NAME = "test-embedder"
+
+
+def make_chunks(doc_id: str, n: int) -> tuple[list[Document], list[str]]:
+    """`n` chunks of document `doc_id` with ids in the ingestion format `<doc_id>:<i>`."""
+    docs = [
+        Document(
+            page_content=f"{doc_id} chunk {i}",
+            metadata={"doc_id": doc_id, "chunk_index": i},
+        )
+        for i in range(n)
+    ]
+    return docs, [f"{doc_id}:{i}" for i in range(n)]
+
+
 @pytest.fixture
 def store(tmp_path: Path, embeddings: ControllableEmbeddings) -> FaissVectorStore:
-    return FaissVectorStore(tmp_path / "index", embeddings)
+    return FaissVectorStore(tmp_path / "index", embeddings, MODEL_NAME)

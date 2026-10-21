@@ -25,6 +25,7 @@ from backend.app.schemas import (
 from backend.app.services.ingestion import IngestionService
 from backend.app.services.llm import build_llm
 from backend.app.services.rag import RagService
+from backend.app.services.reconciliation import reconcile_index
 from backend.app.services.registry import DocumentRegistry
 from backend.app.services.seeding import seed_sample_data
 from backend.app.vectorstore import (
@@ -55,11 +56,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         build_embeddings, settings.embedding_model, settings.model_cache_dir
     )
     await asyncio.to_thread(embeddings.embed_query, "warm-up")
-    dense = await asyncio.to_thread(FaissVectorStore, settings.index_dir, embeddings)
+    # Both raise (and abort startup) on a corrupt or mismatched index / manifest: serving from
+    # a doubtful store is worse than not serving.
+    registry = await asyncio.to_thread(DocumentRegistry, settings.index_dir / "documents.json")
+    dense = await asyncio.to_thread(
+        FaissVectorStore, settings.index_dir, embeddings, settings.embedding_model
+    )
+    # Reconcile before the hybrid store exists: it builds BM25 from `dense`, so the keyword
+    # index only ever sees chunks that survived the cross-check.
+    reconciled = await asyncio.to_thread(reconcile_index, dense, registry)
+    if reconciled.phantoms_dropped or reconciled.incomplete_documents:
+        logger.warning(
+            "Index reconciled: %d phantom vector(s) dropped, %d document(s) with missing chunks",
+            reconciled.phantoms_dropped,
+            len(reconciled.incomplete_documents),
+        )
     store = await asyncio.to_thread(
         HybridVectorStore, dense, settings.retrieval_candidates, settings.rrf_k
     )
-    registry = DocumentRegistry(settings.index_dir / "documents.json")
 
     reranker: Reranker | None = None
     if settings.rerank_enabled:

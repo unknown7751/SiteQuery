@@ -41,9 +41,19 @@ paths:
 - Routes never touch the index; they call `services/ingestion.py` and `services/rag.py`,
   which depend on the `VectorStore` interface (`vectorstore/base.py`) — swapping FAISS for
   pgvector/Qdrant later must not touch routes or services.
-- The store owns its lock and persistence: mutate under the lock, then persist atomically
-  (write to temp, then replace). Chunk ids are `"<doc_id>:<n>"` so deletes are exact.
+- The store owns its lock and persistence: embed OUTSIDE the lock, mutate under it, then persist.
+  Never overwrite index files in place: write generation N+1 (`index.<n>.faiss/.pkl`), fsync the
+  files and the directory, then flip the `current` pointer with `fsutil.atomic_write_bytes`.
+  If a write fails, reload the last durable generation so memory never runs ahead of disk.
+  Chunk ids are `"<doc_id>:<n>"` so deletes are exact; `delete` ignores ids that are not indexed.
+- Anything else that must survive a crash (e.g. the document manifest) is written with
+  `fsutil.atomic_write_bytes`, never `write_text` + `replace`.
 - Embedding model name and cache dir come from settings; keep the cache on the mounted volume.
+  The model name and vector dimension are persisted in `current`; startup refuses an index built
+  with a different model (`EmbeddingMismatchError`) or one that is corrupt (`IndexCorruptedError`).
+- Startup order in `lifespan`: registry -> `FaissVectorStore` -> `reconcile_index` -> `HybridVectorStore`
+  (so BM25 is built only from reconciled chunks). A corrupt manifest is quarantined to
+  `documents.json.corrupt` and aborts startup (`ManifestCorruptedError`); never reset it to empty.
 
 ## Loaders
 - One loader class per file type in `backend/app/loaders/`, registered by extension in

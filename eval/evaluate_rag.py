@@ -262,7 +262,9 @@ async def build_pipeline(base: Settings, workdir: Path) -> Pipeline:
     embeddings = await asyncio.to_thread(
         build_embeddings, base.embedding_model, base.model_cache_dir
     )
-    dense = await asyncio.to_thread(FaissVectorStore, settings.index_dir, embeddings)
+    dense = await asyncio.to_thread(
+        FaissVectorStore, settings.index_dir, embeddings, base.embedding_model
+    )
     store = await asyncio.to_thread(
         HybridVectorStore, dense, settings.retrieval_candidates, settings.rrf_k
     )

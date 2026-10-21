@@ -31,5 +31,13 @@ class VectorStore(Protocol):
     def size(self) -> int: ...
 
 
+class ReconcilableStore(Protocol):
+    """What startup reconciliation needs: list every chunk id, and remove some."""
+
+    def chunk_ids(self) -> frozenset[str]: ...
+
+    def delete(self, ids: list[str]) -> None: ...
+
+
 class Reranker(Protocol):
     def rerank(self, query: str, hits: list[SearchHit], top_n: int) -> list[SearchHit]: ...
