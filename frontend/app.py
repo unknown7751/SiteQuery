@@ -133,11 +133,12 @@ def source_card(s: dict[str, Any], msg_id: int) -> str:
         )
     else:
         score = f'<span title="Hybrid rank agreement">Match {s["relevance"]:.0%}</span>'
+    # <details> makes the whole card click-to-expand without JS; `[open]` lifts the snippet clamp.
     return (
-        f'<div class="src" id="src-{msg_id}-{s["index"]}">'
+        f'<details class="src" id="src-{msg_id}-{s["index"]}"><summary>'
         f'<div class="src-head"><div><span class="chip">[{s["index"]}]</span>'
         f'<b>{escape(s["filename"])}</b>{page} {badge}</div>{score}</div>'
-        f'<div class="src-snippet">{escape(s["snippet"])}</div></div>'
+        f'<div class="src-snippet">{escape(s["snippet"])}</div></summary></details>'
     )
 
 
@@ -146,7 +147,7 @@ def render_sources(sources: list[dict[str, Any]], msg_id: int) -> None:
         return
     cards = "".join(source_card(s, msg_id) for s in sources)
     st.markdown(
-        f'<div class="src-label">📎 {len(sources)} sources · click a citation to expand</div>{cards}',
+        f'<div class="src-label">📎 {len(sources)} sources · click a card or citation to expand</div>{cards}',
         unsafe_allow_html=True,
     )
 

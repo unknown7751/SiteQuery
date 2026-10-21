@@ -144,6 +144,8 @@ button[kind="primary"]:hover { transform: translateY(-1px); filter: brightness(1
   padding: .6rem .8rem; margin-bottom: .55rem; background: var(--canvas);
   scroll-margin-top: 5rem; transition: background .2s, box-shadow .2s;
 }
+.src > summary { list-style: none; cursor: pointer; }
+.src > summary::-webkit-details-marker { display: none; }
 .src-head { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; }
 .src-head b { color: var(--ink); }
 .src-head > span { color: var(--ink-2); white-space: nowrap; }
@@ -156,7 +158,8 @@ button[kind="primary"]:hover { transform: translateY(-1px); filter: brightness(1
   background: var(--brand-soft); border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(255, 107, 26, .22);
 }
-.src:target .src-snippet { display: block; -webkit-line-clamp: unset; overflow: visible; color: var(--ink); }
+.src[open] { background: var(--brand-soft); border-color: var(--brand); }
+.src[open] .src-snippet, .src:target .src-snippet { display: block; -webkit-line-clamp: unset; overflow: visible; color: var(--ink); }
 .chip {
   display: inline-block; background: var(--brand-soft); color: var(--brand-dark);
   border-radius: 999px; padding: .05rem .5rem; font-size: .72rem; font-weight: 700;
