@@ -51,6 +51,11 @@ pip install -r backend/requirements.txt -r frontend/requirements.txt
 uvicorn backend.main:app --reload --port 8000
 streamlit run frontend/app.py
 
+# Tests and types (no API key or model downloads needed)
+pip install -r requirements-dev.txt
+pytest
+mypy                                           # strict; config in pyproject.toml
+
 # Evaluation (needs GROQ_API_KEY; builds a throwaway index, never touches data/index)
 python -m eval.evaluate_rag --compare          # with vs without reranker -> eval/reports/latest.md
 python -m eval.evaluate_rag --retrieval-only   # no LLM: hit@k / MRR only

@@ -1,0 +1,32 @@
+# Tooling config only; runtime dependencies live in backend/ and frontend/ requirements.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+    # langchain-community announces its own sunset on import; not actionable here.
+    "ignore:.*langchain-community.*:DeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["backend", "tests"]
+explicit_package_bases = true
+mypy_path = "."
+warn_unreachable = true
+show_error_codes = true
+
+# Libraries that ship no type information. Listed explicitly (not a global
+# ignore_missing_imports) so a typo in a first-party import still fails the check.
+[[tool.mypy.overrides]]
+module = [
+    "faiss.*",
+    "fastembed.*",
+    "rank_bm25.*",
+    "pdf2image.*",
+    "pytesseract.*",
+    "docx2txt.*",
+]
+ignore_missing_imports = true

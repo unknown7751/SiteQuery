@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from starlette.datastructures import UploadFile
+from fastapi import UploadFile
 
 from backend.app.config import Settings
 from backend.app.errors import AppError
@@ -28,7 +28,9 @@ async def seed_sample_data(
     """
     if not settings.seed_sample_data:
         return 0
-    if store.size > 0 or await asyncio.to_thread(registry.list):
+    if store.size > 0:
+        return 0
+    if await asyncio.to_thread(registry.list):
         return 0
     directory = settings.sample_data_dir
     if not directory.is_dir():
