@@ -1,4 +1,4 @@
-# vConstruct — RAG-Powered Construction Document & RFI Assistant
+# SiteQuery — RAG-Powered Construction Document & RFI Assistant
 
 A decoupled RAG application that lets project teams upload construction documents
 (RFIs, specifications, submittals, meeting minutes) and ask grounded, cited questions

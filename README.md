@@ -1,4 +1,4 @@
-# ConstructSense
+# SiteQuery
 
 **A RAG-powered assistant that answers questions about construction documents, with every claim cited back to the file and page it came from.**
 
@@ -12,7 +12,7 @@ with `[n]` citations, clickable to the exact source passage, and an honest "the 
 Project knowledge in construction lives in hundreds of PDFs that nobody has time to re-read: a 400-page spec book,
 a running RFI log, weekly OAC minutes. The cost of not finding the right paragraph is real.
 
-| Pain point | What ConstructSense does |
+| Pain point | What SiteQuery does |
 | --- | --- |
 | **RFI lookups.** "Did we already ask the EOR about this? What did they say?" means grepping logs and email threads. | Ask the question directly. The answer cites the RFI number, response and status. |
 | **Spec conflicts.** Drawing says 15 ft joint spacing, spec says 12 ft. Finding both takes a while. | Hybrid retrieval surfaces both passages; the model is instructed to flag conflicts and cite each. |
@@ -67,7 +67,7 @@ docker compose up --build
 #    UI  http://localhost:8501     API docs  http://localhost:8000/docs
 ```
 
-On first start, if the index is empty, ConstructSense automatically indexes the two documents in
+On first start, if the index is empty, SiteQuery automatically indexes the two documents in
 [`sample_data/`](sample_data/) (a fictional site safety protocol and a structural concrete RFI log), so you can
 query immediately without uploading anything. Set `SEED_SAMPLE_DATA=false` to disable.
 
