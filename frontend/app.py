@@ -1,4 +1,4 @@
-"""vConstruct Document & RFI Assistant — Streamlit UI (layout and chat flow only)."""
+"""SiteQuery Document & RFI Assistant — Streamlit UI (layout and chat flow only)."""
 
 import re
 from html import escape
@@ -10,7 +10,7 @@ import api_client as api
 from styles import CSS
 
 st.set_page_config(
-    page_title="vConstruct | Document & RFI Assistant",
+    page_title="SiteQuery | Document & RFI Assistant",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -160,8 +160,8 @@ def render_sidebar() -> None:
     health: api.Health | None = st.session_state[HEALTH]
     with st.sidebar:
         st.markdown(
-            """<div class="brand"><div class="brand-logo">v</div>
-            <div><div class="brand-name">vConstruct</div>
+            """<div class="brand"><div class="brand-logo">S</div>
+            <div><div class="brand-name">SiteQuery</div>
             <div class="brand-sub">Document &amp; RFI Assistant</div></div></div>""",
             unsafe_allow_html=True,
         )

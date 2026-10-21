@@ -440,7 +440,7 @@ async def run(args: argparse.Namespace) -> int:
             return 2
         judge = Judge(judge_llm)
 
-    with tempfile.TemporaryDirectory(prefix="vconstruct-eval-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="sitequery-eval-") as tmp:
         pipeline = await build_pipeline(base, Path(tmp))
         reranker: Reranker | None = None
         if args.compare or not args.no_rerank:

@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: ./backend
-    container_name: vconstruct-api
+    container_name: sitequery-api
     ports:
       - "8000:8000"
     environment:
@@ -41,7 +41,7 @@ services:
   ui:
     build:
       context: ./frontend
-    container_name: vconstruct-ui
+    container_name: sitequery-ui
     ports:
       - "8501:8501"
     environment:

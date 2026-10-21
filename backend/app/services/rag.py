@@ -15,7 +15,7 @@ from backend.app.vectorstore import Reranker, SearchHit, VectorStore
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """\
-You are the vConstruct Document & RFI Assistant, helping construction project teams \
+You are the SiteQuery Document & RFI Assistant, helping construction project teams \
 (project managers, engineers, superintendents, estimators) find answers in their project \
 documents: RFIs, specifications, submittals, drawings notes, and meeting minutes.
 

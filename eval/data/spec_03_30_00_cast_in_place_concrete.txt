@@ -1,5 +1,5 @@
 SECTION 03 30 00 - CAST-IN-PLACE CONCRETE
-Project: Riverside Medical Pavilion (vConstruct sample project)
+Project: Riverside Medical Pavilion (SiteQuery sample project)
 
 PART 1 - GENERAL
 

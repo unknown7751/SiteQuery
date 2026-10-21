@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="vConstruct Document & RFI Assistant API",
+    title="SiteQuery Document & RFI Assistant API",
     version="0.1.0",
     description="Upload construction documents and ask grounded, cited questions about them.",
     lifespan=lifespan,
