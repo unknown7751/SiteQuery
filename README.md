@@ -99,8 +99,8 @@ Each source in a `/query` response carries:
 | `rerank_score` | Cross-encoder relevance, sigmoid of the logit (0..1); `null` if reranking is off |
 | `ocr` | `true` if the chunk text came from OCR rather than the PDF's text layer |
 
-In the chat UI, citation markers like **[2]** are links: clicking one scrolls to and expands the matching source card,
-which shows its rerank score and a *Native text* / *OCR* badge.
+In the chat UI, citation markers like **[2]** are links: clicking one scrolls to and expands the matching source card
+(clicking a card also expands it), which shows its rerank score and a *Native text* / *OCR* badge.
 
 ## Configuration
 
@@ -114,6 +114,18 @@ All settings are environment variables (see [`.env.example`](.env.example)). The
 | `RERANK_THRESHOLD` | `0.10` | Chunks below this are dropped, except the top-1 fallback. |
 | `RERANK_ENABLED` | `true` | `false` skips the reranker download and uses RRF order. |
 | `SEED_SAMPLE_DATA` | `true` | Index `sample_data/` on startup if the index is empty. |
+
+## Data and recovery
+
+The FAISS index and the document manifest (`documents.json`) live in `data/index/`. The API checks them on startup
+and **refuses to start** rather than serve from a doubtful store:
+
+- **Corrupt or inconsistent index**, or an index built with a different `EMBEDDING_MODEL` than the one configured:
+  startup fails with an explanatory error. Switch back to the original model, or re-upload your documents into a fresh index.
+- **Corrupt manifest:** the unreadable file is moved aside as `documents.json.corrupt` (numbered if one already exists)
+  and startup fails, so nothing is silently reset.
+- **Index and manifest out of step** (e.g. after a crash mid-write): vectors with no manifest entry are dropped and
+  documents with missing chunks are logged as a warning; startup continues.
 
 ## Evaluation
 
@@ -141,6 +153,14 @@ Python 3.11+, plus `tesseract-ocr` and `poppler-utils` for OCR:
 pip install -r backend/requirements.txt -r frontend/requirements.txt
 uvicorn backend.main:app --reload --port 8000
 streamlit run frontend/app.py
+```
+
+Tests and type checks need no API key or model downloads:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+mypy                  # strict; config in pyproject.toml
 ```
 
 See [`CLAUDE.md`](CLAUDE.md) and [`.claude/rules/`](.claude/rules/) for conventions.
